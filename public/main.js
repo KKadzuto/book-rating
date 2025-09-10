@@ -81,6 +81,7 @@ async function bootstrap() {
   const openBtn = document.getElementById('openPublish');
   const rateBtn = document.getElementById('rate');
   const nextBtn = document.getElementById('next');
+  const langButtons = document.querySelectorAll('.lang-switch button');
 
   // Publish dialog
   const dialog = document.getElementById('publishDialog');
@@ -111,21 +112,72 @@ async function bootstrap() {
   const stats = await fetchStats();
   renderStats(stats);
 
-  // Rate
-  rateBtn.addEventListener('click', async () => {
-    const book = books[currentIndex];
-    if (!book) return;
-    const score = Number(prompt('Оцените книгу от 1 до 5')); // простой ввод
-    if (!Number.isInteger(score) || score < 1 || score > 5) return;
-    const result = await voteBook(book.id, score, clientId);
-    if (result && result.already) {
-      alert('Вы уже голосовали за эту книгу');
+  // i18n
+  const dict = {
+    kk: {
+      title_app: 'Кітаптар', publish_button: 'Жариялау', rate_button: 'Бағалау', next_button: 'Келесі',
+      stats_title: 'Статистика', publish_title: 'Кітапты жариялау', field_title: 'Атауы', field_image: 'Сурет (міндетті емес)',
+      cancel: 'Болдырмау', publish_submit: 'Жариялау', rate_title: 'Кітапты бағалаңыз',
+      empty_title: 'Әзірге кітап жоқ', empty_sub: 'Алғашқы кітапты жариялаңыз', already_voted: 'Сіз бұл кітапқа дауыс бердіңіз'
+    },
+    ru: {
+      title_app: 'Книги', publish_button: 'Опубликовать', rate_button: 'Оценить', next_button: 'Следующая',
+      stats_title: 'Статистика', publish_title: 'Опубликовать книгу', field_title: 'Название', field_image: 'Фото (необязательно)',
+      cancel: 'Отмена', publish_submit: 'Опубликовать', rate_title: 'Оцените книгу',
+      empty_title: 'Пока нет книг', empty_sub: 'Опубликуйте первую книгу', already_voted: 'Вы уже голосовали за эту книгу'
+    },
+    en: {
+      title_app: 'Books', publish_button: 'Publish', rate_button: 'Rate', next_button: 'Next',
+      stats_title: 'Statistics', publish_title: 'Publish a book', field_title: 'Title', field_image: 'Image (optional)',
+      cancel: 'Cancel', publish_submit: 'Publish', rate_title: 'Rate the book',
+      empty_title: 'No books yet', empty_sub: 'Publish the first one', already_voted: 'You have already voted for this book'
     }
-    // refresh
-    books = await fetchBooks();
-    renderViewer(books[currentIndex]);
-    const statsNow = await fetchStats();
-    renderStats(statsNow);
+  };
+  function applyLanguage(lang) {
+    const lng = dict[lang] ? lang : 'kk';
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      if (dict[lng][key]) el.textContent = dict[lng][key];
+    });
+  }
+  const savedLang = localStorage.getItem('lang') || 'kk';
+  applyLanguage(savedLang);
+  langButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const lang = btn.getAttribute('data-lang');
+      localStorage.setItem('lang', lang);
+      applyLanguage(lang);
+    });
+  });
+
+  // Rate via modal
+  const rateDialog = document.getElementById('rateDialog');
+  const rateForm = document.getElementById('rateForm');
+  const rateButtons = rateForm.querySelectorAll('button[data-score]');
+  let rateOpen = false;
+  rateBtn.addEventListener('click', () => {
+    if (rateOpen) return;
+    rateOpen = true;
+    rateDialog.showModal();
+  });
+  rateForm.addEventListener('close', () => { rateOpen = false; });
+  rateForm.addEventListener('reset', () => { rateDialog.close(); });
+  rateButtons.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const score = Number(btn.getAttribute('data-score'));
+      const book = books[currentIndex];
+      if (!book) return;
+      const result = await voteBook(book.id, score, clientId);
+      if (result && result.already) {
+        alert('Вы уже голосовали за эту книгу');
+      }
+      rateDialog.close();
+      // refresh
+      books = await fetchBooks();
+      renderViewer(books[currentIndex]);
+      const statsNow = await fetchStats();
+      renderStats(statsNow);
+    });
   });
 
   // Next

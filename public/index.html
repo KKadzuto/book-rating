@@ -9,8 +9,15 @@
   <body>
     <div class="container">
       <header>
-        <h1>Книги</h1>
-        <button id="openPublish" class="primary right">Опубликовать</button>
+        <h1 data-i18n="title_app">Кітаптар</h1>
+        <div class="header-actions">
+          <div class="lang-switch">
+            <button data-lang="kk" class="ghost">KK</button>
+            <button data-lang="ru" class="ghost">RU</button>
+            <button data-lang="en" class="ghost">EN</button>
+          </div>
+          <button id="openPublish" class="primary right" data-i18n="publish_button">Жариялау</button>
+        </div>
       </header>
 
       <main>
@@ -20,14 +27,14 @@
             <div id="title" class="title"></div>
             <div id="meta" class="meta"></div>
             <div class="controls">
-              <button id="rate" class="primary">Оценить</button>
-              <button id="next" class="ghost">Следующая</button>
+              <button id="rate" class="primary" data-i18n="rate_button">Бағалау</button>
+              <button id="next" class="ghost" data-i18n="next_button">Келесі</button>
             </div>
           </div>
         </div>
 
         <section class="stats">
-          <h3>Статистика</h3>
+          <h3 data-i18n="stats_title">Статистика</h3>
           <div id="statsTable" class="table"></div>
         </section>
       </main>
@@ -35,18 +42,34 @@
 
     <dialog id="publishDialog">
       <form id="publishForm" method="dialog">
-        <h3>Опубликовать книгу</h3>
+        <h3 data-i18n="publish_title">Кітапты жариялау</h3>
         <label>
-          Название
+          <span data-i18n="field_title">Атауы</span>
           <input type="text" name="title" required maxlength="200" />
         </label>
         <label>
-          Фото (необязательно)
+          <span data-i18n="field_image">Сурет (міндетті емес)</span>
           <input type="file" name="image" accept="image/*" />
         </label>
         <menu>
-          <button type="reset">Отмена</button>
-          <button class="primary" type="submit">Опубликовать</button>
+          <button type="reset" data-i18n="cancel">Болдырмау</button>
+          <button class="primary" type="submit" data-i18n="publish_submit">Жариялау</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="rateDialog">
+      <form id="rateForm" method="dialog">
+        <h3 data-i18n="rate_title">Кітапты бағалаңыз</h3>
+        <div class="rate-buttons">
+          <button data-score="1" type="button">1</button>
+          <button data-score="2" type="button">2</button>
+          <button data-score="3" type="button">3</button>
+          <button data-score="4" type="button">4</button>
+          <button data-score="5" type="button">5</button>
+        </div>
+        <menu>
+          <button type="reset" data-i18n="cancel">Болдырмау</button>
         </menu>
       </form>
     </dialog>
