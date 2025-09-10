@@ -37,6 +37,10 @@ async function ensureSchema() {
     );
   `);
   await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS books_title_unique
+    ON books (title);
+  `);
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS ratings (
       id SERIAL PRIMARY KEY,
       book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
@@ -99,11 +103,18 @@ app.post('/api/books', upload.single('image'), async (req, res) => {
       imageMime = req.file.mimetype;
     }
 
-    const { rows } = await pool.query(
-      'INSERT INTO books (title, image, image_mime) VALUES ($1, $2, $3) RETURNING id, title',
-      [title, imageBuffer, imageMime]
-    );
-    res.status(201).json(rows[0]);
+    const insertSql = `
+      INSERT INTO books (title, image, image_mime)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (title) DO NOTHING
+      RETURNING id, title;
+    `;
+    const result = await pool.query(insertSql, [title, imageBuffer, imageMime]);
+    if (result.rows.length > 0) {
+      return res.status(201).json(result.rows[0]);
+    }
+    const existing = await pool.query('SELECT id, title FROM books WHERE title = $1', [title]);
+    return res.status(200).json(existing.rows[0]);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Failed to create book' });
