@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: book-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: book_user
+      POSTGRES_PASSWORD: book_password
+      POSTGRES_DB: book_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_books:/var/lib/postgresql/data
+
+volumes:
+  pgdata_books:
+    driver: local
+

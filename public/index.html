@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Оценка книг</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Оценка книг</h1>
+        <button id="openPublish" class="primary">Опубликовать книгу</button>
+      </header>
+
+      <main>
+        <div id="books" class="books"></div>
+      </main>
+    </div>
+
+    <dialog id="publishDialog">
+      <form id="publishForm" method="dialog">
+        <h3>Опубликовать книгу</h3>
+        <label>
+          Название
+          <input type="text" name="title" required maxlength="200" />
+        </label>
+        <label>
+          Фото (необязательно)
+          <input type="file" name="image" accept="image/*" />
+        </label>
+        <menu>
+          <button type="reset">Отмена</button>
+          <button class="primary" type="submit">Опубликовать</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="/script.js"></script>
+  </body>
+  </html>
+
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Оценка книг</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Оценка книг</h1>
+        <form id="publish-form" class="publish-form">
+          <input id="title-input" type="text" placeholder="Название книги" maxlength="200" required />
+          <button type="submit">Опубликовать книгу</button>
+        </form>
+      </header>
+
+      <main>
+        <div id="empty" class="empty">Пока нет книг. Добавьте первую!</div>
+        <ul id="list" class="list"></ul>
+      </main>
+    </div>
+
+    <script src="/main.js"></script>
+  </body>
+  </html>
+
+
