@@ -45,6 +45,8 @@ async function ensureSchema() {
       created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
     );
   `);
+  // На существующих БД добавим столбец, если его нет
+  await pool.query(`ALTER TABLE ratings ADD COLUMN IF NOT EXISTS client_id TEXT;`);
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS ratings_unique_per_client
     ON ratings (book_id, client_id)
