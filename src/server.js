@@ -36,6 +36,16 @@ async function ensureSchema() {
       created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
     );
   `);
+  // Удалим дубликаты по title, оставив запись с минимальным id
+  await pool.query(`
+    WITH dup AS (
+      SELECT id, ROW_NUMBER() OVER (PARTITION BY title ORDER BY id) AS rn
+      FROM books
+    )
+    DELETE FROM books b
+    USING dup
+    WHERE b.id = dup.id AND dup.rn > 1;
+  `);
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS books_title_unique
     ON books (title);
