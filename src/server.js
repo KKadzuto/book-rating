@@ -10,14 +10,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || undefined,
-  host: process.env.PGHOST,
-  port: process.env.PGPORT ? Number(process.env.PGPORT) : undefined,
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-});
+const useDatabaseUrl = Boolean(process.env.DATABASE_URL);
+const pool = new Pool(
+  useDatabaseUrl
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      }
+    : {
+        host: process.env.PGHOST || 'localhost',
+        port: process.env.PGPORT ? Number(process.env.PGPORT) : 5432,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE,
+      }
+);
 
 async function ensureSchema() {
   await pool.query(`
@@ -34,8 +41,14 @@ async function ensureSchema() {
       id SERIAL PRIMARY KEY,
       book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
       score INTEGER NOT NULL CHECK (score BETWEEN 1 AND 5),
+      client_id TEXT,
       created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
     );
+  `);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS ratings_unique_per_client
+    ON ratings (book_id, client_id)
+    WHERE client_id IS NOT NULL;
   `);
 }
 
@@ -99,16 +112,42 @@ app.post('/api/books/:id/rate', async (req, res) => {
   try {
     const bookId = Number(req.params.id);
     const score = Number(req.body.score);
+    const clientId = (req.headers['x-client-id'] || '').toString().trim() || null;
     if (!Number.isInteger(score) || score < 1 || score > 5) {
       return res.status(400).json({ error: 'Score must be 1-5' });
     }
     const exists = await pool.query('SELECT 1 FROM books WHERE id=$1', [bookId]);
     if (exists.rowCount === 0) return res.status(404).json({ error: 'Book not found' });
-    await pool.query('INSERT INTO ratings (book_id, score) VALUES ($1, $2)', [bookId, score]);
+    try {
+      await pool.query('INSERT INTO ratings (book_id, score, client_id) VALUES ($1, $2, $3)', [bookId, score, clientId]);
+    } catch (e) {
+      if (e && e.code === '23505') {
+        return res.status(409).json({ error: 'Already voted' });
+      }
+      throw e;
+    }
     res.status(201).json({ ok: true });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Failed to rate book' });
+  }
+});
+
+app.get('/api/stats', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT b.id, b.title,
+             COALESCE(ROUND(AVG(r.score)::numeric, 2), NULL) AS avg_rating,
+             COUNT(r.id) AS votes
+      FROM books b
+      LEFT JOIN ratings r ON r.book_id = b.id
+      GROUP BY b.id
+      ORDER BY votes DESC, avg_rating DESC NULLS LAST, b.id DESC;
+    `);
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Failed to fetch stats' });
   }
 });
 

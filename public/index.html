@@ -9,12 +9,27 @@
   <body>
     <div class="container">
       <header>
-        <h1>Оценка книг</h1>
-        <button id="openPublish" class="primary">Опубликовать книгу</button>
+        <h1>Книги</h1>
+        <button id="openPublish" class="primary right">Опубликовать</button>
       </header>
 
       <main>
-        <div id="books" class="books"></div>
+        <div id="viewer" class="viewer">
+          <img id="cover" alt="Обложка" />
+          <div class="info">
+            <div id="title" class="title"></div>
+            <div id="meta" class="meta"></div>
+            <div class="controls">
+              <button id="rate" class="primary">Оценить</button>
+              <button id="next" class="ghost">Следующая</button>
+            </div>
+          </div>
+        </div>
+
+        <section class="stats">
+          <h3>Статистика</h3>
+          <div id="statsTable" class="table"></div>
+        </section>
       </main>
     </div>
 
@@ -36,7 +51,7 @@
       </form>
     </dialog>
 
-    <script src="/script.js"></script>
+    <script src="/main.js"></script>
   </body>
   </html>
 
